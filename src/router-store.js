@@ -9,6 +9,24 @@ export class RouterStore {
         this.goTo = this.goTo.bind(this);
     }
 
+    checkViewChanged = (view, paramsObj, queryParamsObj) => {
+      if (!this.currentView || this.currentView.rootPath !== view.rootPath) {
+        return true;
+      } else {
+        if (this.currentView.name !== view.name) {
+          return true
+        } else if (this.currentView.shouldTriggerHooksOnSameView) {
+          return this.currentView.shouldTriggerHooksOnSameView({
+            currentParams: this.params,
+            currentQueryParams : this.queryParams,
+            nextParams : paramsObj,
+            nextQueryParams : queryParamsObj
+          });
+        }
+      }
+      return false;
+    }
+
     @action
     goTo(view, paramsObj, store, queryParamsObj) {
         const nextPath = view.replaceUrlParams(paramsObj, queryParamsObj);
@@ -18,8 +36,7 @@ export class RouterStore {
             return;
         }
 
-        const rootViewChanged =
-            !this.currentView || this.currentView.rootPath !== view.rootPath || this.currentView.name !== view.name;
+        const rootViewChanged = this.checkViewChanged(view, paramsObj, queryParamsObj);
         const currentParams = toJS(this.params);
         const currentQueryParams = toJS(this.queryParams);
 
